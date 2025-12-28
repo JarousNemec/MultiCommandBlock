@@ -44,12 +44,14 @@ public class CommandProcessorScreen extends Screen {
 
     private final BlockPos pos;
     private final List<String> initialLines;
+    private final List<Integer> invalidLines;
     private final TextEditor textEditor;
 
-    public CommandProcessorScreen(BlockPos pos, List<String> initialLines) {
+    public CommandProcessorScreen(BlockPos pos, List<String> initialLines, List<Integer> invalidLines) {
         super(Text.empty());
         this.pos = pos;
         this.initialLines = initialLines;
+        this.invalidLines = invalidLines;
         textEditor = new TextEditor();
     }
 
@@ -67,28 +69,8 @@ public class CommandProcessorScreen extends Screen {
 
     private void initEditorOnce() {
         if (!initialized) {
-            //      todo: delete for prod
-            List<String> commands = new ArrayList<>();
-            commands.add("/summon sheep ~ ~ ~ {Color:0,CustomName:'{\"text\":\"DUHOVKA\",\"color\":\"light_purple\"}',ActiveEffects:[{Id:1,Amplifier:1,Duration:999999,ShowParticles:0}]}");
-            commands.add("");
-            commands.add("/summon lightning_bolt");
-            commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
-            commands.add("");
-            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}");
-            commands.add("/summon sheep ~ ~ ~ {Color:0,CustomName:'{\"text\":\"DUHOVKA\",\"color\":\"light_purple\"}',ActiveEffects:[{Id:1,Amplifier:1,Duration:999999,ShowParticles:0}]}");
-            commands.add("");
-            commands.add("/summon lightning_bolt");
-            commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
-            commands.add("");
-            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}");
-            commands.add("/summon sheep ~ ~ ~ {Color:0,CustomName:'{\"text\":\"DUHOVKA\",\"color\":\"light_purple\"}',ActiveEffects:[{Id:1,Amplifier:1,Duration:999999,ShowParticles:0}]}");
-            commands.add("");
-            commands.add("/summon lightning_bolt");
-            commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
-            commands.add("");
-            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}");
             if (initialLines.isEmpty())
-                textEditor.init(commands);
+                textEditor.init(new ArrayList<>());
             else
                 textEditor.init(initialLines);
 
@@ -191,13 +173,16 @@ public class CommandProcessorScreen extends Screen {
                     editorX + lineNumberWidth - textRenderer.getWidth(number) + PADDING;
             int numberY =
                     editorY + PADDING + row * LINE_HEIGHT;
+            int color = invalidLines.contains(lineIndex)
+                    ? 0xFFFF5555
+                    : 0xFF888888;
 
             context.drawText(
                     textRenderer,
                     number,
                     numberX,
-                    numberY,
-                    0xFF888888,
+                    numberY
+                    , color,
                     false
             );
         }

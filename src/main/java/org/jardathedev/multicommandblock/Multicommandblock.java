@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.jardathedev.multicommandblock.entity.CommandProcessorBlockEntity;
 import org.jardathedev.multicommandblock.registry.*;
@@ -42,14 +43,20 @@ public class Multicommandblock implements ModInitializer {
                         BlockEntity be = player.getWorld().getBlockEntity(pos);
                         if (be instanceof CommandProcessorBlockEntity cp) {
 
-                            cp.setLines(lines);
+                            cp.setLinesServer(lines, (ServerWorld) player.getWorld());
 
-                            // ⬇️ POŠLEME DATA ZPĚT NA CLIENT
                             PacketByteBuf out = PacketByteBufs.create();
                             out.writeBlockPos(pos);
+
                             out.writeInt(lines.size());
                             for (String line : lines) {
                                 out.writeString(line);
+                            }
+
+                            List<Integer> invalid = cp.getInvalidLines();
+                            out.writeInt(invalid.size());
+                            for (int i : invalid) {
+                                out.writeInt(i);
                             }
 
                             ServerPlayNetworking.send(
@@ -61,7 +68,6 @@ public class Multicommandblock implements ModInitializer {
                     });
                 }
         );
-
 
 
     }

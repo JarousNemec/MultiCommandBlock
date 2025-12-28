@@ -23,11 +23,17 @@ public class ModClient implements ClientModInitializer {
                 (client, handler, buf, responseSender) -> {
 
                     BlockPos pos = buf.readBlockPos();
-                    int count = buf.readInt();
 
+                    int count = buf.readInt();
                     List<String> lines = new ArrayList<>();
                     for (int i = 0; i < count; i++) {
                         lines.add(buf.readString());
+                    }
+
+                    int invalidCount = buf.readInt();
+                    List<Integer> invalid = new ArrayList<>();
+                    for (int i = 0; i < invalidCount; i++) {
+                        invalid.add(buf.readInt());
                     }
 
                     client.execute(() -> {
@@ -37,10 +43,10 @@ public class ModClient implements ClientModInitializer {
                         if (be instanceof CommandProcessorBlockEntity cp) {
 
                             // INIT SYNC
-                            cp.setLines(lines);
+                            cp.setLinesClient(lines, invalid);
 
                             client.setScreen(
-                                    new CommandProcessorScreen(cp.getPos(), cp.getLines())
+                                    new CommandProcessorScreen(cp.getPos(), cp.getLines(), cp.getInvalidLines())
                             );
                         }
                     });
@@ -53,11 +59,17 @@ public class ModClient implements ClientModInitializer {
                 (client, handler, buf, responseSender) -> {
 
                     BlockPos pos = buf.readBlockPos();
-                    int count = buf.readInt();
 
+                    int count = buf.readInt();
                     List<String> lines = new ArrayList<>();
                     for (int i = 0; i < count; i++) {
                         lines.add(buf.readString());
+                    }
+
+                    int invalidCount = buf.readInt();
+                    List<Integer> invalid = new ArrayList<>();
+                    for (int i = 0; i < invalidCount; i++) {
+                        invalid.add(buf.readInt());
                     }
 
                     client.execute(() -> {
@@ -65,7 +77,7 @@ public class ModClient implements ClientModInitializer {
 
                         BlockEntity be = client.world.getBlockEntity(pos);
                         if (be instanceof CommandProcessorBlockEntity cp) {
-                            cp.setLines(lines);
+                            cp.setLinesClient(lines, invalid);
                         }
                     });
                 }
