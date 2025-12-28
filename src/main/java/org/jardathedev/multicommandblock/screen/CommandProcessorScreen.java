@@ -12,6 +12,8 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.jardathedev.multicommandblock.registry.ModPackets;
+import org.jardathedev.multicommandblock.screen.textEditor.SyntaxHighlighter;
+import org.jardathedev.multicommandblock.screen.textEditor.TextEditor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -29,8 +31,8 @@ public class CommandProcessorScreen extends Screen {
 
     private int lineNumberWidth;
 
-    private static final int TERM_COLUMNS = 100;
-    private static final int TERM_ROWS = 25;
+    private static final int TERM_COLUMNS = 64;
+    private static final int TERM_ROWS = 20;
     private static final int LINE_HEIGHT = 10;
     private static final int PADDING = 6;
 
@@ -72,19 +74,19 @@ public class CommandProcessorScreen extends Screen {
             commands.add("/summon lightning_bolt");
             commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
             commands.add("");
-            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}\n");
+            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}");
             commands.add("/summon sheep ~ ~ ~ {Color:0,CustomName:'{\"text\":\"DUHOVKA\",\"color\":\"light_purple\"}',ActiveEffects:[{Id:1,Amplifier:1,Duration:999999,ShowParticles:0}]}");
             commands.add("");
             commands.add("/summon lightning_bolt");
             commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
             commands.add("");
-            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}\n");
+            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}");
             commands.add("/summon sheep ~ ~ ~ {Color:0,CustomName:'{\"text\":\"DUHOVKA\",\"color\":\"light_purple\"}',ActiveEffects:[{Id:1,Amplifier:1,Duration:999999,ShowParticles:0}]}");
             commands.add("");
             commands.add("/summon lightning_bolt");
             commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
             commands.add("");
-            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}\n");
+            commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}");
             if (initialLines.isEmpty())
                 textEditor.init(commands);
             else
@@ -213,13 +215,14 @@ public class CommandProcessorScreen extends Screen {
                 if (charIndex >= line.length()) break;
 
                 char c = line.charAt(charIndex);
+                int color = SyntaxHighlighter.getColor(line, charIndex);
 
                 context.drawText(
                         textRenderer,
                         String.valueOf(c),
                         textX + col * charWidth,
                         textY + row * LINE_HEIGHT,
-                        0xFFFFFF,
+                        color,
                         false
                 );
             }
@@ -252,7 +255,8 @@ public class CommandProcessorScreen extends Screen {
     private void drawCursor(DrawContext context, int textX, int textY, int maxLines) {
         if ((System.currentTimeMillis() / 500) % 2 != 0) return;
 
-        if (textEditor.getCursorLine() < scrollY || textEditor.getCursorLine() >= scrollY + CommandProcessorScreen.TERM_ROWS) return;
+        if (textEditor.getCursorLine() < scrollY || textEditor.getCursorLine() >= scrollY + CommandProcessorScreen.TERM_ROWS)
+            return;
         if (textEditor.getCursorLine() < 0 || textEditor.getCursorLine() >= maxLines) return;
 
         int visibleColumn = textEditor.getCursorColumn() - scrollX;

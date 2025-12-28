@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.screen;
+package org.jardathedev.multicommandblock.screen.textEditor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -317,6 +317,8 @@ public class TextEditor {
         }
 
         clampCursor();
+
+        text = text.replace("\r\n", "\n").replace("\r", "\n");
 
         String[] split = text.split("\n", -1);
 
