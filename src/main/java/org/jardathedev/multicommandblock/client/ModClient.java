@@ -5,7 +5,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.jardathedev.multicommandblock.entity.CommandProcessorBlockEntity;
 import org.jardathedev.multicommandblock.registry.ModPackets;
@@ -41,7 +40,7 @@ public class ModClient implements ClientModInitializer {
                             cp.setLines(lines);
 
                             client.setScreen(
-                                    new CommandProcessorScreen(cp)
+                                    new CommandProcessorScreen(cp.getPos(), cp.getLines())
                             );
                         }
                     });

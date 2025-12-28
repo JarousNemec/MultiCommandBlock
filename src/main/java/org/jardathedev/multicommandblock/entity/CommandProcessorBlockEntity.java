@@ -27,6 +27,10 @@ public class CommandProcessorBlockEntity extends BlockEntity {
     public void setLines(List<String> newLines) {
         this.lines = new ArrayList<>(newLines);
         markDirty();
+
+        if (world != null && !world.isClient) {
+            world.updateListeners(pos, getCachedState(), getCachedState(), 3);
+        }
     }
 
     @Override

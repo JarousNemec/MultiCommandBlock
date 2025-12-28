@@ -4,11 +4,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
-import org.jardathedev.multicommandblock.entity.CommandProcessorBlockEntity;
+import net.minecraft.util.math.BlockPos;
 import org.jardathedev.multicommandblock.registry.ModPackets;
 import org.lwjgl.glfw.GLFW;
 
@@ -38,12 +40,14 @@ public class CommandProcessorScreen extends Screen {
     private int editorHeight;
     private int charWidth;
 
-    private final CommandProcessorBlockEntity blockEntity;
+    private final BlockPos pos;
+    private final List<String> initialLines;
     private final TextEditor textEditor;
 
-    public CommandProcessorScreen(CommandProcessorBlockEntity blockEntity) {
+    public CommandProcessorScreen(BlockPos pos, List<String> initialLines) {
         super(Text.empty());
-        this.blockEntity = blockEntity;
+        this.pos = pos;
+        this.initialLines = initialLines;
         textEditor = new TextEditor();
     }
 
@@ -81,10 +85,10 @@ public class CommandProcessorScreen extends Screen {
             commands.add("/give @p diamond_sword{display:{Name:'{\"text\":\"Thorův meč\",\"color\":\"aqua\"}'},Enchantments:[{id:sharpness,lvl:5}],AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:10,Operation:0,UUID:[I;1,2,3,4]}]} 1");
             commands.add("");
             commands.add("/execute as @a at @s if entity @s[nbt={OnGround:0b}] run summon firework_rocket ~ ~ ~ {LifeTime:10}\n");
-            if (blockEntity.getLines().isEmpty())
+            if (initialLines.isEmpty())
                 textEditor.init(commands);
             else
-                textEditor.init(blockEntity.getLines());
+                textEditor.init(initialLines);
 
             initialized = true;
         }
@@ -92,7 +96,7 @@ public class CommandProcessorScreen extends Screen {
 
     private void initDimensions() {
         charWidth = textRenderer.getWidth("W");
-        int digits = String.valueOf(textEditor.lineCount()).length();
+        int digits = String.valueOf(textEditor.getLinesCount()).length();
         lineNumberWidth = textRenderer.getWidth("0".repeat(digits)) + 6;
         editorWidth =
                 lineNumberWidth +
@@ -115,9 +119,9 @@ public class CommandProcessorScreen extends Screen {
         if (!dirty) return;
 
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeBlockPos(blockEntity.getPos());
+        buf.writeBlockPos(pos);
 
-        buf.writeInt(textEditor.lineCount());
+        buf.writeInt(textEditor.getLinesCount());
         for (String line : textEditor.getLines()) {
             buf.writeString(line);
         }
@@ -134,15 +138,50 @@ public class CommandProcessorScreen extends Screen {
 
         drawLineNumbers(context);
 
+        drawSelection(context, textX, textY);
+
         drawMainText(context, textX, textY);
 
-        drawCursor(context, textX, textY, textEditor.lineCount(), TERM_ROWS);
+        drawCursor(context, textX, textY, textEditor.getLinesCount());
     }
+
+    private void drawSelection(DrawContext context, int textX, int textY) {
+        if (!textEditor.hasSelection()) return;
+
+        int startLine = textEditor.getSelStartLine();
+        int startCol = textEditor.getSelStartCol();
+        int endLine = textEditor.getSelEndLine();
+        int endCol = textEditor.getSelEndCol();
+
+        for (int line = startLine; line <= endLine; line++) {
+
+            int visibleLine = line - scrollY;
+            if (visibleLine < 0 || visibleLine >= TERM_ROWS) continue;
+
+            int fromCol = (line == startLine) ? startCol : 0;
+            int toCol = (line == endLine)
+                    ? endCol
+                    : textEditor.getLine(line).length();
+
+            int visibleFrom = Math.max(fromCol - scrollX, 0);
+            int visibleTo = Math.min(toCol - scrollX, TERM_COLUMNS);
+
+            if (visibleFrom >= visibleTo) continue;
+
+            int x1 = textX + visibleFrom * charWidth;
+            int y1 = textY + visibleLine * LINE_HEIGHT;
+            int x2 = textX + visibleTo * charWidth;
+            int y2 = y1 + LINE_HEIGHT;
+
+            context.fill(x1, y1, x2, y2, 0x803388FF); // translucent blue
+        }
+    }
+
 
     private void drawLineNumbers(DrawContext context) {
         for (int row = 0; row < TERM_ROWS; row++) {
             int lineIndex = scrollY + row;
-            if (lineIndex >= textEditor.lineCount()) break;
+            if (lineIndex >= textEditor.getLinesCount()) break;
 
             String number = String.valueOf(lineIndex + 1);
 
@@ -165,7 +204,7 @@ public class CommandProcessorScreen extends Screen {
     private void drawMainText(DrawContext context, int textX, int textY) {
         for (int row = 0; row < TERM_ROWS; row++) {
             int lineIndex = scrollY + row;
-            if (lineIndex >= textEditor.lineCount()) break;
+            if (lineIndex >= textEditor.getLinesCount()) break;
 
             String line = textEditor.getLine(lineIndex);
 
@@ -210,10 +249,10 @@ public class CommandProcessorScreen extends Screen {
         );
     }
 
-    private void drawCursor(DrawContext context, int textX, int textY, int maxLines, int maxVisibleLines) {
+    private void drawCursor(DrawContext context, int textX, int textY, int maxLines) {
         if ((System.currentTimeMillis() / 500) % 2 != 0) return;
 
-        if (textEditor.getCursorLine() < scrollY || textEditor.getCursorLine() >= scrollY + maxVisibleLines) return;
+        if (textEditor.getCursorLine() < scrollY || textEditor.getCursorLine() >= scrollY + CommandProcessorScreen.TERM_ROWS) return;
         if (textEditor.getCursorLine() < 0 || textEditor.getCursorLine() >= maxLines) return;
 
         int visibleColumn = textEditor.getCursorColumn() - scrollX;
@@ -265,27 +304,96 @@ public class CommandProcessorScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 
+        boolean shiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+
+        boolean ctrlDown =
+                InputUtil.isKeyPressed(
+                        MinecraftClient.getInstance().getWindow().getHandle(),
+                        GLFW.GLFW_KEY_LEFT_CONTROL
+                ) ||
+                        InputUtil.isKeyPressed(
+                                MinecraftClient.getInstance().getWindow().getHandle(),
+                                GLFW.GLFW_KEY_RIGHT_CONTROL
+                        );
+
+        if (ctrlDown) {
+            switch (keyCode) {
+
+                // CTRL + C
+                case GLFW.GLFW_KEY_C -> {
+                    if (textEditor.hasSelection()) {
+                        String text = textEditor.getSelectedText();
+                        MinecraftClient.getInstance().keyboard.setClipboard(text);
+                    }
+                    return true;
+                }
+
+                // CTRL + X
+                case GLFW.GLFW_KEY_X -> {
+                    if (textEditor.hasSelection()) {
+                        String text = textEditor.getSelectedText();
+                        MinecraftClient.getInstance().keyboard.setClipboard(text);
+                        textEditor.deleteSelection();
+                        dirty = true;
+                        ensureCursorVisible();
+                    }
+                    return true;
+                }
+
+                // CTRL + V
+                case GLFW.GLFW_KEY_V -> {
+                    String clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
+                    if (!clipboard.isEmpty()) {
+                        textEditor.pasteText(clipboard);
+                        dirty = true;
+                        ensureCursorVisible();
+                    }
+                    return true;
+                }
+
+                // CTRL + A
+                case GLFW.GLFW_KEY_A -> {
+                    textEditor.selectAll();
+                    ensureCursorVisible();
+                    return true;
+                }
+            }
+        }
+
         switch (keyCode) {
             case GLFW.GLFW_KEY_LEFT -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.moveCursorHorizontal(-1);
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.moveCursorHorizontal(1);
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_UP -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.moveCursorVertical(-1);
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.moveCursorVertical(1);
                 ensureCursorVisible();
                 return true;
             }
+
             case GLFW.GLFW_KEY_ENTER -> {
                 textEditor.applyEnter();
                 dirty = true;
@@ -298,29 +406,41 @@ public class CommandProcessorScreen extends Screen {
                 ensureCursorVisible();
                 return true;
             }
-
             case GLFW.GLFW_KEY_DELETE -> {
                 textEditor.applyDelete();
                 dirty = true;
                 ensureCursorVisible();
                 return true;
             }
+
             case GLFW.GLFW_KEY_HOME -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.applyHome();
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_END -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.applyEnd();
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_PAGE_UP -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.moveCursorVertical(-TERM_ROWS);
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_PAGE_DOWN -> {
+                if (shiftDown) textEditor.startSelection();
+                else textEditor.clearSelection();
+
                 textEditor.moveCursorVertical(TERM_ROWS);
                 ensureCursorVisible();
                 return true;
