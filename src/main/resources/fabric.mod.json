@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "multicommandblock",
+  "version": "${version}",
+  "name": "MultiCommandBlock",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/multicommandblock/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.jardathedev.multicommandblock.client.ModDataGenerator"
+    ],
+    "client": [
+      "org.jardathedev.multicommandblock.client.ModClient"
+    ],
+    "main": [
+      "org.jardathedev.multicommandblock.Multicommandblock"
+    ]
+  },
+  "mixins": [
+    "multicommandblock.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
