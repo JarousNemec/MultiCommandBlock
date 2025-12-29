@@ -139,7 +139,7 @@ public class CommandProcessorBlockEntity extends BlockEntity {
 
     private void executeMinecraftCommand(ServerCommandSource source, CommandManager commandManager, MinecraftServer server, String command) {
         try {
-            commandManager.executeWithPrefix(source, command);
+            commandManager.executeWithPrefix(source.withSilent(), command);
         } catch (Exception e) {
             server.sendMessage(
                     Text.literal("§cCommandProcessor error: " + e.getMessage())

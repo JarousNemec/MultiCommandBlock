@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "multicommandblock:block/command_processor_block"
+    }
+  }
+}
+

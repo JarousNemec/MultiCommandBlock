@@ -3,6 +3,7 @@ package org.jardathedev.multicommandblock.block;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
@@ -33,6 +34,12 @@ public class CommandProcessorBlock extends BlockWithEntity {
     public CommandProcessorBlock(Settings settings) {
         super(settings);
     }
+
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.MODEL;
+    }
+
 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,

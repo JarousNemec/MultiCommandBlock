@@ -11,6 +11,6 @@ public class ModBlocks {
     public static CommandProcessorBlock COMMAND_PROCESSOR;
 
     public static void register() {
-        COMMAND_PROCESSOR = Registry.register(Registries.BLOCK, Identifier.of(Multicommandblock.MOD_ID, "command_processor"), new CommandProcessorBlock(FabricBlockSettings.create()));
+        COMMAND_PROCESSOR = Registry.register(Registries.BLOCK, Identifier.of(Multicommandblock.MOD_ID, "command_processor_block"), new CommandProcessorBlock(FabricBlockSettings.create()));
     }
 }

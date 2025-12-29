@@ -7,7 +7,7 @@
   "authors": [],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "icon": "assets/multicommandblock/icon.png",
+  "icon": "assets/multicommandblock/textures/block/command_processor_block.png",
   "environment": "*",
   "entrypoints": {
     "fabric-datagen": [
