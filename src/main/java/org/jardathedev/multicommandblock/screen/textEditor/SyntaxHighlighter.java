@@ -1,6 +1,6 @@
 package org.jardathedev.multicommandblock.screen.textEditor;
 
-import static org.jardathedev.multicommandblock.util.commandUtil.*;
+import static org.jardathedev.multicommandblock.util.CommandUtil.*;
 
 public class SyntaxHighlighter {
     public static final int COLOR_DEFAULT = 0xFFFFFFFF;

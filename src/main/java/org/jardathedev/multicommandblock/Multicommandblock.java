@@ -43,7 +43,7 @@ public class Multicommandblock implements ModInitializer {
                         BlockEntity be = player.getWorld().getBlockEntity(pos);
                         if (be instanceof CommandProcessorBlockEntity cp) {
 
-                            cp.setLinesServer(lines, (ServerWorld) player.getWorld());
+                            cp.setLinesServer(lines);
 
                             PacketByteBuf out = PacketByteBufs.create();
                             out.writeBlockPos(pos);

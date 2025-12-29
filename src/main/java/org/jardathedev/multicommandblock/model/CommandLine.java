@@ -1,22 +1,26 @@
 package org.jardathedev.multicommandblock.model;
 
 
-public class CommandLine {
+public record CommandLine(String raw, LineType type, LineState state, boolean isExecutable) {
 
-    private final String raw;
-    private final LineType type;
-
-    public CommandLine(String raw, LineType type) {
-        this.raw = raw;
-        this.type = type;
+    public boolean isValid() {
+        return state == LineState.VALID;
     }
 
-    public String raw() {
-        return raw;
+    public boolean isBlank() {
+        return raw.isBlank();
     }
 
-    public LineType type() {
-        return type;
+    public boolean isComment(){
+        return type == LineType.COMMENT;
+    }
+
+    public boolean isMinecraft(){
+        return type == LineType.MINECRAFT;
+    }
+
+    public boolean isCustom(){
+        return type == LineType.CUSTOM;
     }
 
     public String commandBody() {

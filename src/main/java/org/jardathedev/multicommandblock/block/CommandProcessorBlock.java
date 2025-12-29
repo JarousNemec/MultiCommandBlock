@@ -23,9 +23,6 @@ import org.jardathedev.multicommandblock.entity.CommandProcessorBlockEntity;
 import org.jardathedev.multicommandblock.registry.ModBlockEntities;
 import org.jardathedev.multicommandblock.registry.ModPackets;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
 
 public class CommandProcessorBlock extends BlockWithEntity {

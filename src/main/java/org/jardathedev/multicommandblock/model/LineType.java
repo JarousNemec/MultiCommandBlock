@@ -1,9 +1,9 @@
 package org.jardathedev.multicommandblock.model;
 
 public enum LineType {
-    EMPTY,
+    BLANK,
+    RAW,
     COMMENT,
-    INVALID,
     MINECRAFT,
     CUSTOM
 }
