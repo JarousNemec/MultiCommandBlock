@@ -434,7 +434,17 @@ public class CommandProcessorScreen extends Screen {
                 ensureCursorVisible();
                 return true;
             }
+            case GLFW.GLFW_KEY_TAB -> {
+                if (shiftDown) {
+                    textEditor.outdent();
+                } else {
+                    textEditor.indent();
+                }
 
+                dirty = true;
+                ensureCursorVisible();
+                return true;
+            }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

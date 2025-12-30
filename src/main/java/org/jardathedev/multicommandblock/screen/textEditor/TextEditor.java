@@ -3,6 +3,8 @@ package org.jardathedev.multicommandblock.screen.textEditor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.jardathedev.multicommandblock.util.CommandUtil.INDENT;
+
 public class TextEditor {
     private final List<String> lines;
     private int cursorLine;
@@ -63,6 +65,7 @@ public class TextEditor {
     public void addLineAtIndex(int lineIndex, String line) {
         lines.add(lineIndex, line);
     }
+
     public void addLine(String line) {
         lines.add(line);
     }
@@ -279,6 +282,67 @@ public class TextEditor {
 
         return sb.toString();
     }
+
+    public void indent() {
+        if (hasSelection) {
+            indentSelection();
+        } else {
+            indentCurrentLine();
+        }
+    }
+
+    private void indentSelection() {
+        int start = getSelStartLine();
+        int end = getSelEndLine();
+
+        for (int i = start; i <= end; i++) {
+            setLine(i, INDENT + getLine(i));
+        }
+
+        selStartCol += INDENT.length();
+        selEndCol += INDENT.length();
+        cursorColumn += INDENT.length();
+    }
+
+
+    private void indentCurrentLine() {
+        setCurrentLine(INDENT + getCurrentLine());
+        cursorColumn += INDENT.length();
+    }
+
+    public void outdent() {
+        if (hasSelection) {
+            outdentSelection();
+        } else {
+            outdentCurrentLine();
+        }
+    }
+
+    private void outdentSelection() {
+        int start = getSelStartLine();
+        int end = getSelEndLine();
+
+        for (int i = start; i <= end; i++) {
+            String line = getLine(i);
+            if (line.startsWith(INDENT)) {
+                setLine(i, line.substring(INDENT.length()));
+            }
+        }
+
+        selStartCol = Math.max(0, selStartCol - INDENT.length());
+        selEndCol = Math.max(0, selEndCol - INDENT.length());
+        cursorColumn = Math.max(0, cursorColumn - INDENT.length());
+    }
+
+    private void outdentCurrentLine() {
+        String line = getCurrentLine();
+
+        if (line.startsWith(INDENT)) {
+            setCurrentLine(line.substring(INDENT.length()));
+            cursorColumn = Math.max(0, cursorColumn - INDENT.length());
+        }
+    }
+
 
     public void deleteSelection() {
         if (!hasSelection) return;

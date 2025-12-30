@@ -1,7 +1,7 @@
 package org.jardathedev.multicommandblock.model;
 
 
-public record CommandLine(String raw, LineType type, LineState state, boolean isExecutable) {
+public record CommandLine(String raw, LineType type, LineState state, int indentLevel, boolean isExecutable, boolean hasBody) {
 
     public boolean isValid() {
         return state == LineState.VALID;

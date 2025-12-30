@@ -12,21 +12,33 @@ public class SyntaxHighlighter {
 
 
     public static int getColor(String line, int index) {
+        String trimmed = line.stripLeading();
+        int indent = line.length() - trimmed.length();
 
         char c = line.charAt(index);
-
-        // === STRING ===
-        if (isQuote(line, index)) {
+        if(line.isBlank()) {
             return COLOR_DEFAULT;
         }
 
+//      === COMMENT ===
+        if (isComment(trimmed)) {
+            return COLOR_COMMAND;
+        }
+
+        // === STRING ===
+        if (isQuote(line, index)) {
+            return COLOR_STRING;
+        }
         if (isInsideString(line, index)) {
             return COLOR_STRING; // orange
         }
 
         // === COMMAND ===
-        if (index == 0 && (c == '/' || c == '%' || c == '#')) {
-            return COLOR_COMMAND; // green
+        if (index == indent && !trimmed.isEmpty()) {
+            c = trimmed.charAt(0);
+            if (c == '/' || c == '%' || c == '#') {
+                return COLOR_COMMAND;
+            }
         }
 
         // === SELECTORS ===
