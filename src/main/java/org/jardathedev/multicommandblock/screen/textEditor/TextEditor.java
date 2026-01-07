@@ -102,7 +102,6 @@ public class TextEditor {
         if (cursorColumn > lineLength) cursorColumn = lineLength;
     }
 
-
     public void moveCursorVertical(int step) {
         cursorLine += step;
         clampCursor();
@@ -258,7 +257,6 @@ public class TextEditor {
         hasSelection = true;
     }
 
-
     public String getSelectedText() {
         if (!hasSelection) return "";
 
@@ -304,7 +302,6 @@ public class TextEditor {
         cursorColumn += INDENT.length();
     }
 
-
     private void indentCurrentLine() {
         setCurrentLine(INDENT + getCurrentLine());
         cursorColumn += INDENT.length();
@@ -342,7 +339,6 @@ public class TextEditor {
             cursorColumn = Math.max(0, cursorColumn - INDENT.length());
         }
     }
-
 
     public void deleteSelection() {
         if (!hasSelection) return;

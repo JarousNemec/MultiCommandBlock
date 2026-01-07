@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.model;
+package org.jardathedev.multicommandblock.shared.enums;
 
 public enum LineType {
     BLANK,

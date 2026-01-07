@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.model;
+package org.jardathedev.multicommandblock.shared;
 
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;

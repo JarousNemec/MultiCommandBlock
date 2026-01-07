@@ -1,5 +1,8 @@
-package org.jardathedev.multicommandblock.model;
+package org.jardathedev.multicommandblock.shared;
 
+
+import org.jardathedev.multicommandblock.shared.enums.LineState;
+import org.jardathedev.multicommandblock.shared.enums.LineType;
 
 public record CommandLine(String raw, LineType type, LineState state, int indentLevel, boolean isExecutable, boolean hasBody) {
 

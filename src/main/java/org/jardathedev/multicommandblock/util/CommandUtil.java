@@ -1,8 +1,8 @@
 package org.jardathedev.multicommandblock.util;
 
 import org.jardathedev.multicommandblock.Multicommandblock;
-import org.jardathedev.multicommandblock.model.CommandLine;
-import org.jardathedev.multicommandblock.model.ExecutionFrame;
+import org.jardathedev.multicommandblock.shared.CommandLine;
+import org.jardathedev.multicommandblock.shared.ExecutionFrame;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -127,7 +127,7 @@ public class CommandUtil {
 
             int lastExecutableIndentLevel = programLines.get(lastExecutableIndex).indentLevel();
             if (frame.endIndex != -1 || frame.startIndex == -1) {
-                Multicommandblock.LOGGER.info("Skipping frame with enterIndex: {} for currentIndentLevel {} and frame.indentLevel {} and lastExecutableIndentLevel: {}", frame.enterIndex + 1, currentIndentLevel, frame.childIndentLevel, lastExecutableIndentLevel);
+//                Multicommandblock.LOGGER.info("Skipping frame with enterIndex: {} for currentIndentLevel {} and frame.indentLevel {} and lastExecutableIndentLevel: {}", frame.enterIndex + 1, currentIndentLevel, frame.childIndentLevel, lastExecutableIndentLevel);
                 continue;
             }
 
@@ -142,10 +142,10 @@ public class CommandUtil {
                             break;
                         }
                     }
-                Multicommandblock.LOGGER.info("2Ended enterIndex: {} on endIndex: {} for currentIndentLevel {} and frame.indentLevel {} and lastExecutableIndentLevel: {}", frame.enterIndex + 1, frame.endIndex+1, currentIndentLevel, frame.childIndentLevel, lastExecutableIndentLevel);
+//                Multicommandblock.LOGGER.info("2Ended enterIndex: {} on endIndex: {} for currentIndentLevel {} and frame.indentLevel {} and lastExecutableIndentLevel: {}", frame.enterIndex + 1, frame.endIndex+1, currentIndentLevel, frame.childIndentLevel, lastExecutableIndentLevel);
 
             } else {
-                Multicommandblock.LOGGER.info("3NotEnding enterIndex: {} on endIndex: {} for currentIndentLevel {} and frame.indentLevel {} and lastExecutableIndentLevel: {}", frame.enterIndex + 1, 0, currentIndentLevel, frame.childIndentLevel, lastExecutableIndentLevel);
+//                Multicommandblock.LOGGER.info("3NotEnding enterIndex: {} on endIndex: {} for currentIndentLevel {} and frame.indentLevel {} and lastExecutableIndentLevel: {}", frame.enterIndex + 1, 0, currentIndentLevel, frame.childIndentLevel, lastExecutableIndentLevel);
             }
         }
     }

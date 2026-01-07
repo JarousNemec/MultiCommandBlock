@@ -7,7 +7,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jardathedev.multicommandblock.Multicommandblock;
-import org.jardathedev.multicommandblock.model.*;
+import org.jardathedev.multicommandblock.shared.*;
+import org.jardathedev.multicommandblock.shared.enums.LineState;
+import org.jardathedev.multicommandblock.shared.enums.LineType;
 import org.jardathedev.multicommandblock.util.CommandUtil;
 
 import java.util.ArrayDeque;
@@ -67,7 +69,6 @@ public class ProcessorProgramManager {
 
         // čekáme (sleep)
         if (_sleepTicks > 0) {
-            Multicommandblock.LOGGER.info("Ticking sleep on index: {}", _executionIndex + 1);
             _sleepTicks--;
             return;
         }
@@ -76,18 +77,14 @@ public class ProcessorProgramManager {
 
         while (!executionStack.isEmpty()) {
             ExecutionFrame frame = executionStack.peek();
-            Multicommandblock.LOGGER.info("Executing frame at index: {} with endIndex: {}", frame.enterIndex + 1, frame.endIndex + 1);
             if (_executionIndex > frame.endIndex) {
                 frame.remainingRevolutions--;
-                Multicommandblock.LOGGER.info("Remaining revolutions: {}", frame.remainingRevolutions);
 
                 if (frame.remainingRevolutions > 0) {
                     _executionIndex = frame.startIndex;
-                    Multicommandblock.LOGGER.info("Execution index: {}", _executionIndex + 1);
                     break;
                 } else {
                     executionStack.pop();
-                    Multicommandblock.LOGGER.info("Execution stack popped");
                 }
 
             } else {
@@ -96,18 +93,15 @@ public class ProcessorProgramManager {
         }
 
 
-        if (_programLines.get(_executionIndex).isExecutable()) {
-            Multicommandblock.LOGGER.info("Executing index: {}", _executionIndex + 1);
+        if (_programLines.get(_executionIndex).isExecutable())
             executeProgramNextStep(attrs);
-        } else
-            Multicommandblock.LOGGER.info("Skipping index: {}", _executionIndex + 1);
 
         _executionIndex++;
 
 
         // konec
         if (_executionIndex < 0 || _executionIndex >= _programLines.size()) {
-            Multicommandblock.LOGGER.info("Ending on index: {}", _executionIndex - 1);
+            Multicommandblock.LOGGER.info("Execution ended on index: {}", _executionIndex - 1);
             _executing = false;
             _executionIndex = 0;
             return;
@@ -141,7 +135,7 @@ public class ProcessorProgramManager {
 
     private void executeCustomCommand(String arguments) {
         List<String> args = parseArguments(arguments);
-        if(args.size() <= 1)
+        if (args.size() <= 1)
             return;
         String command = args.get(0);
         List<String> params = args.subList(1, args.size());
@@ -150,7 +144,6 @@ public class ProcessorProgramManager {
             _sleepTicks = Math.max(0, Integer.parseInt(params.get(0)));
         } else if ("repeat".equals(command) && !params.isEmpty()) {
             ExecutionFrame frame = null;
-            Multicommandblock.LOGGER.info("Executing repeat command...");
             for (ExecutionFrame f : _executionFrames) {
                 if (f.enterIndex == _executionIndex) {
                     frame = f.copy();
@@ -158,7 +151,6 @@ public class ProcessorProgramManager {
                 }
             }
             if (frame == null) {
-                Multicommandblock.LOGGER.info("Cannot find execution frame with enterIndex: {}", _executionIndex + 1);
                 return;
             }
             if (frame.revolutionsCount <= 0) {
@@ -167,7 +159,6 @@ public class ProcessorProgramManager {
             }
             frame.remainingRevolutions = frame.revolutionsCount;
             executionStack.push(frame);
-            Multicommandblock.LOGGER.info("Successfully executed repeat command on index: {}", _executionIndex);
         }
     }
 
@@ -181,7 +172,6 @@ public class ProcessorProgramManager {
         int lastExecutableLineIndex = 0;
         for (int i = 0; i <= lines.size(); i++) {
             if (programLine != null) {
-                Multicommandblock.LOGGER.info("lastExecutableIndex: {} indentLevel: {} lineNumber: {} state: {} type: {} commandBody: {}", lastExecutableLineIndex, programLine.indentLevel(), i - 1, programLine.state(), programLine.type(), programLine.commandBody());
                 _programLines.add(programLine);
             }
             if (i == lines.size())
@@ -267,7 +257,7 @@ public class ProcessorProgramManager {
 
     private CustomCommentValidationResult isValidCustomCommand(String line) {
         List<String> args = parseArguments(line);
-        if(args.size() <= 1)
+        if (args.size() <= 1)
             return new CustomCommentValidationResult(false, false, 1);
         String command = args.get(0);
         List<String> params = args.subList(1, args.size());

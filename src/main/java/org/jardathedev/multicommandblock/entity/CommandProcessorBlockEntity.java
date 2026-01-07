@@ -10,7 +10,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jardathedev.multicommandblock.entity.processorProgram.ProcessorProgramManager;
-import org.jardathedev.multicommandblock.model.BlockEntityAttributes;
+import org.jardathedev.multicommandblock.shared.BlockEntityAttributes;
 import org.jardathedev.multicommandblock.registry.ModBlockEntities;
 
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ public class CommandProcessorBlockEntity extends BlockEntity {
     }
 
     public void onRedstoneRise(ServerWorld world) {
-        program.start(new BlockEntityAttributes(world, pos));
+        program.start();
     }
 
     public void onRedstoneFall(ServerWorld world) {
