@@ -97,13 +97,13 @@ public class CommandUtil {
     }
 
     public static boolean isInsideString(String line, int index) {
-        boolean inside = false;
+        boolean isInside = false;
         for (int i = 0; i < index; i++) {
             if (line.charAt(i) == '"' && (i == 0 || line.charAt(i - 1) != '\\')) {
-                inside = !inside;
+                isInside = !isInside;
             }
         }
-        return inside;
+        return isInside;
     }
 
     public static boolean isNBTKey(String line, int index) {

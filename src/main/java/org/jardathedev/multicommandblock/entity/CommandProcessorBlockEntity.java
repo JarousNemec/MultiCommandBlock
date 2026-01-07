@@ -46,19 +46,19 @@ public class CommandProcessorBlockEntity extends BlockEntity {
     }
 
     public void neighbourUpdate(BlockPos pos, ServerWorld world) {
-        boolean powered = world.isReceivingRedstonePower(pos);
+        boolean isPowered = world.isReceivingRedstonePower(pos);
 
         // rising edge
-        if (powered && !wasPowered) {
+        if (isPowered && !wasPowered) {
             onRedstoneRise(world);
         }
 
         // falling edge
-        if (!powered && wasPowered) {
+        if (!isPowered && wasPowered) {
             onRedstoneFall(world);
         }
 
-        wasPowered = powered;
+        wasPowered = isPowered;
     }
 
     public void onRedstoneRise(ServerWorld world) {

@@ -18,7 +18,7 @@ public class TextEditorWidget extends ClickableWidget {
     private int scrollY = 0;
     private int scrollX = 0;
 
-    private boolean dirty = false;
+    private boolean hasChanged = false;
 
     private final TextEditor textEditor;
     private final TextRenderer textRenderer;
@@ -49,8 +49,8 @@ public class TextEditorWidget extends ClickableWidget {
         return textEditor;
     }
 
-    public boolean isDirty() {
-        return dirty;
+    public boolean hasChanged() {
+        return hasChanged;
     }
 
     @Override
@@ -122,7 +122,7 @@ public class TextEditorWidget extends ClickableWidget {
             int lineIndex = scrollY + row;
             if (lineIndex >= textEditor.getLinesCount()) break;
 
-            String number = String.valueOf(lineIndex + 1);
+            String number = String.valueOf(lineIndex);
 
             int numberX =
                     getX() + props.lineNumberWidth - textRenderer.getWidth(number) + props.padding;
@@ -235,7 +235,7 @@ public class TextEditorWidget extends ClickableWidget {
         if (!this.isFocused()) return false;
         if (chr >= 32) {
             textEditor.typeChar(chr);
-            dirty = true;
+            hasChanged = true;
             ensureCursorVisible();
             return true;
         }
@@ -246,9 +246,9 @@ public class TextEditorWidget extends ClickableWidget {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!this.isFocused()) return false;
-        boolean shiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+        boolean isShiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
 
-        boolean ctrlDown =
+        boolean isCtrlDown =
                 InputUtil.isKeyPressed(
                         MinecraftClient.getInstance().getWindow().getHandle(),
                         GLFW.GLFW_KEY_LEFT_CONTROL
@@ -258,7 +258,7 @@ public class TextEditorWidget extends ClickableWidget {
                                 GLFW.GLFW_KEY_RIGHT_CONTROL
                         );
 
-        if (ctrlDown) {
+        if (isCtrlDown) {
             switch (keyCode) {
 
                 // CTRL + C
@@ -276,7 +276,7 @@ public class TextEditorWidget extends ClickableWidget {
                         String text = textEditor.getSelectedText();
                         MinecraftClient.getInstance().keyboard.setClipboard(text);
                         textEditor.deleteSelection();
-                        dirty = true;
+                        hasChanged = true;
                         ensureCursorVisible();
                     }
                     return true;
@@ -287,7 +287,7 @@ public class TextEditorWidget extends ClickableWidget {
                     String clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
                     if (!clipboard.isEmpty()) {
                         textEditor.pasteText(clipboard);
-                        dirty = true;
+                        hasChanged = true;
                         ensureCursorVisible();
                     }
                     return true;
@@ -304,7 +304,7 @@ public class TextEditorWidget extends ClickableWidget {
 
         switch (keyCode) {
             case GLFW.GLFW_KEY_LEFT -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.moveCursorHorizontal(-1);
@@ -312,7 +312,7 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.moveCursorHorizontal(1);
@@ -320,7 +320,7 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_UP -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.moveCursorVertical(-1);
@@ -328,7 +328,7 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.moveCursorVertical(1);
@@ -338,25 +338,25 @@ public class TextEditorWidget extends ClickableWidget {
 
             case GLFW.GLFW_KEY_ENTER -> {
                 textEditor.applyEnter();
-                dirty = true;
+                hasChanged = true;
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_BACKSPACE -> {
                 textEditor.applyBackspace();
-                dirty = true;
+                hasChanged = true;
                 ensureCursorVisible();
                 return true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
                 textEditor.applyDelete();
-                dirty = true;
+                hasChanged = true;
                 ensureCursorVisible();
                 return true;
             }
 
             case GLFW.GLFW_KEY_HOME -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.applyHome();
@@ -364,7 +364,7 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_END -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.applyEnd();
@@ -372,7 +372,7 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_PAGE_UP -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.moveCursorVertical(-props.termRows);
@@ -380,7 +380,7 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_PAGE_DOWN -> {
-                if (shiftDown) textEditor.startSelection();
+                if (isShiftDown) textEditor.startSelection();
                 else textEditor.clearSelection();
 
                 textEditor.moveCursorVertical(props.termRows);
@@ -388,13 +388,13 @@ public class TextEditorWidget extends ClickableWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_TAB -> {
-                if (shiftDown) {
+                if (isShiftDown) {
                     textEditor.outdent();
                 } else {
                     textEditor.indent();
                 }
 
-                dirty = true;
+                hasChanged = true;
                 ensureCursorVisible();
                 return true;
             }

@@ -10,7 +10,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.jardathedev.multicommandblock.registry.ModPackets;
-import org.jardathedev.multicommandblock.screen.textEditor.TextEditor;
 import org.jardathedev.multicommandblock.screen.textEditorWidget.TextEditorWidget;
 import org.jardathedev.multicommandblock.screen.textEditorWidget.TextEditorWidgetProps;
 
@@ -20,35 +19,44 @@ import java.util.List;
 public class CommandProcessorScreen extends Screen {
 
     private TextEditorWidget textEditorWidget;
-    private TextEditor textEditor;
-    private final TextEditorWidgetProps editorProps;
+    private TextEditorWidgetProps editorProps;
     private final BlockPos pos;
+    private final List<String> initialLines;
+    private final List<Integer> invalidLines;
 
     public CommandProcessorScreen(BlockPos pos, List<String> initialLines, List<Integer> invalidLines) {
         super(Text.empty());
         this.pos = pos;
-        editorProps = new TextEditorWidgetProps();
-        editorProps.pos = pos;
-        editorProps.initialLines = initialLines;
-        editorProps.invalidLines = invalidLines;
-        editorProps.termRows = TextEditorWidgetProps.DEFAULT_TERM_ROWS;
-        editorProps.termColumns = TextEditorWidgetProps.DEFAULT_TERM_COLUMNS;
-        editorProps.lineHeight = TextEditorWidgetProps.DEFAULT_LINE_HEIGHT;
-        editorProps.padding = TextEditorWidgetProps.DEFAULT_PADDING;
+        this.initialLines = initialLines;
+        this.invalidLines = invalidLines;
     }
 
     @Override
     protected void init() {
         super.init();
-        initDimensions();
-        textEditorWidget = new TextEditorWidget(editorProps, textRenderer);
-        textEditor = textEditorWidget.getTextEditor();
-        addDrawableChild(textEditorWidget);
+        initTextEditorWidget();
     }
 
-    private void initDimensions() {
+    private void initTextEditorWidget() {
+        initTextEditorWidgetProps();
+        textEditorWidget = new TextEditorWidget(editorProps, textRenderer);
+        addDrawableChild(textEditorWidget);
+        setInitialFocus(textEditorWidget);
+    }
+
+    private void initTextEditorWidgetProps() {
+        editorProps = new TextEditorWidgetProps();
+        editorProps.pos = this.pos;
+        editorProps.initialLines = this.initialLines;
+        editorProps.invalidLines = this.invalidLines;
+        editorProps.termRows = TextEditorWidgetProps.DEFAULT_TERM_ROWS;
+        editorProps.termColumns = TextEditorWidgetProps.DEFAULT_TERM_COLUMNS;
+        editorProps.lineHeight = TextEditorWidgetProps.DEFAULT_LINE_HEIGHT;
+        editorProps.padding = TextEditorWidgetProps.DEFAULT_PADDING;
         editorProps.charWidth = textRenderer.getWidth("W");
+
         int digits = String.valueOf(editorProps.initialLines.size()).length();
+
         editorProps.lineNumberWidth = textRenderer.getWidth("0".repeat(digits));
         editorProps.width =
                 editorProps.lineNumberWidth +
@@ -64,23 +72,25 @@ public class CommandProcessorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        boolean wasHandled = super.mouseClicked(mouseX, mouseY, button);
 
-        if (!handled) {
+        if (!wasHandled) {
             setFocused(null);
         }
 
-        return handled;
+        return wasHandled;
     }
 
     @Override
     public void close() {
         super.close();
 
-        if (!textEditorWidget.isDirty()) return;
+        if (!textEditorWidget.hasChanged()) return;
 
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeBlockPos(this.pos);
+
+        var textEditor = textEditorWidget.getTextEditor();
 
         buf.writeInt(textEditor.getLinesCount());
         for (String line : textEditor.getLines()) {

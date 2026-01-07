@@ -20,68 +20,70 @@ import java.util.List;
 import static org.jardathedev.multicommandblock.util.CommandUtil.*;
 
 public class ProcessorProgramManager {
-    private final List<CommandLine> _programLines;
-    private final List<ExecutionFrame> _executionFrames;
-    private final List<String> _uncompiledLines;
+    private final List<CommandLine> programLines;
+    private final List<ExecutionFrame> executionFrames;
+
+    private final List<String> uncompiledLines;
     private final Deque<ExecutionFrame> executionStack;
-    private boolean _compiled = false;
+    private boolean isCompiled = false;
 
-    private int _executionIndex = 0;
-    private int _sleepTicks = 0;
-    private boolean _executing = false;
+    private int executionIndex = 0;
+    private int sleepTicks = 0;
+    private boolean isExecuting = false;
 
-    private ServerCommandSource _cachedSource;
+    private ServerCommandSource cachedSource;
 
     public ProcessorProgramManager() {
-        this._programLines = new ArrayList<>();
-        this._uncompiledLines = new ArrayList<>();
-        this._executionFrames = new ArrayList<>();
+        this.programLines = new ArrayList<>();
+        this.uncompiledLines = new ArrayList<>();
+        this.executionFrames = new ArrayList<>();
         this.executionStack = new ArrayDeque<>();
     }
 
     public void setNewLines(List<String> uncompiledLines) {
-        _uncompiledLines.clear();
-        _uncompiledLines.addAll(uncompiledLines);
-        _compiled = false;
+        this.uncompiledLines.clear();
+        this.uncompiledLines.addAll(uncompiledLines);
+        isCompiled = false;
     }
 
     public void start() {
-        _executing = true;
-        _executionIndex = 0;
-        _sleepTicks = 0;
+        isExecuting = true;
+        executionIndex = 0;
+        sleepTicks = 0;
     }
 
     public void stop() {
-        _executing = false;
+        isExecuting = false;
     }
 
 
     public void programTick(BlockEntityAttributes attrs) {
-        if (!_compiled) {
+        //check if compiled
+        if (!isCompiled) {
             Multicommandblock.LOGGER.info("Compiling before execution...");
-            compileLines(_uncompiledLines, attrs);
+            compileLines(uncompiledLines, attrs);
             Multicommandblock.LOGGER.info("Compilation complete!");
         }
 
-        if (!_executing) {
+        //escape if not running
+        if (!isExecuting) {
             return;
         }
 
-        // čekáme (sleep)
-        if (_sleepTicks > 0) {
-            _sleepTicks--;
+        // apply sleep
+        if (sleepTicks > 0) {
+            sleepTicks--;
             return;
         }
 
-        // aplikujeme repeat
-
+        // apply repeat
         while (!executionStack.isEmpty()) {
             ExecutionFrame frame = executionStack.peek();
-            if (_executionIndex > frame.endIndex) {
+            if (executionIndex > frame.endIndex) {
                 frame.remainingRevolutions--;
 
                 if (frame.remainingRevolutions > 0) {
-                    _executionIndex = frame.startIndex;
+                    executionIndex = frame.startIndex;
                     break;
                 } else {
                     executionStack.pop();
@@ -92,26 +94,31 @@ public class ProcessorProgramManager {
             }
         }
 
+        CommandLine line = programLines.get(executionIndex);
 
-        if (_programLines.get(_executionIndex).isExecutable())
-            executeProgramNextStep(attrs);
+        //skip non executable lines
+        while (!line.isExecutable()) {
+            executionIndex++;
+            line = programLines.get(executionIndex);
+        }
 
-        _executionIndex++;
+        //execute one line
+        executeLine(line, attrs);
 
+        //increase line pointer
+        executionIndex++;
 
-        // konec
-        if (_executionIndex < 0 || _executionIndex >= _programLines.size()) {
-            Multicommandblock.LOGGER.info("Execution ended on index: {}", _executionIndex - 1);
-            _executing = false;
-            _executionIndex = 0;
+        //stop run if end of program
+        if (executionIndex < 0 || executionIndex >= programLines.size()) {
+            Multicommandblock.LOGGER.info("Execution ended on index: {}", executionIndex - 1);
+            isExecuting = false;
+            executionIndex = 0;
             return;
         }
     }
 
-    private void executeProgramNextStep(BlockEntityAttributes attrs) {
+    private void executeLine(CommandLine line, BlockEntityAttributes attrs) {
         MinecraftServer server = attrs.world().getServer();
-
-        CommandLine line = _programLines.get(_executionIndex);
 
         String command = line.commandBody();
         if (line.isMinecraft())
@@ -141,11 +148,11 @@ public class ProcessorProgramManager {
         List<String> params = args.subList(1, args.size());
 
         if ("sleep".equals(command) && !params.isEmpty()) {
-            _sleepTicks = Math.max(0, Integer.parseInt(params.get(0)));
+            sleepTicks = Math.max(0, Integer.parseInt(params.get(0)));
         } else if ("repeat".equals(command) && !params.isEmpty()) {
             ExecutionFrame frame = null;
-            for (ExecutionFrame f : _executionFrames) {
-                if (f.enterIndex == _executionIndex) {
+            for (ExecutionFrame f : executionFrames) {
+                if (f.enterIndex == executionIndex) {
                     frame = f.copy();
                     break;
                 }
@@ -154,7 +161,7 @@ public class ProcessorProgramManager {
                 return;
             }
             if (frame.revolutionsCount <= 0) {
-                _executionIndex = frame.endIndex;
+                executionIndex = frame.endIndex;
                 return;
             }
             frame.remainingRevolutions = frame.revolutionsCount;
@@ -163,8 +170,8 @@ public class ProcessorProgramManager {
     }
 
     private void compileLines(List<String> lines, BlockEntityAttributes attrs) {
-        _programLines.clear();
-        _executionFrames.clear();
+        programLines.clear();
+        executionFrames.clear();
         MinecraftServer server = attrs.world().getServer();
 
         int currentChildIndentLevel = 0;
@@ -172,7 +179,7 @@ public class ProcessorProgramManager {
         int lastExecutableLineIndex = 0;
         for (int i = 0; i <= lines.size(); i++) {
             if (programLine != null) {
-                _programLines.add(programLine);
+                programLines.add(programLine);
             }
             if (i == lines.size())
                 break;
@@ -192,7 +199,7 @@ public class ProcessorProgramManager {
             }
 
             if (indentLevel < currentChildIndentLevel && programLine != null) {
-                endCorrespondingFrames(_programLines, _executionFrames, indentLevel, lastExecutableLineIndex);
+                endCorrespondingFrames(programLines, executionFrames, indentLevel, lastExecutableLineIndex);
                 currentChildIndentLevel = indentLevel;
             }
 
@@ -218,7 +225,7 @@ public class ProcessorProgramManager {
                             newFrame.enterIndex = i;
                             newFrame.startIndex = i + 1;
                             newFrame.revolutionsCount = result.loopCount();
-                            _executionFrames.add(newFrame);
+                            executionFrames.add(newFrame);
                         }
                         programLine = new CommandLine(trimmed, LineType.CUSTOM, LineState.VALID, indentLevel, true, true);
                     } else {
@@ -231,9 +238,9 @@ public class ProcessorProgramManager {
             } else
                 programLine = new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
         }
-        if (!_programLines.isEmpty())
-            endCorrespondingFrames(_programLines, _executionFrames, 0, lastExecutableLineIndex);
-        _compiled = true;
+        if (!programLines.isEmpty())
+            endCorrespondingFrames(programLines, executionFrames, 0, lastExecutableLineIndex);
+        isCompiled = true;
     }
 
     private boolean isValidMinecraftCommand(
@@ -290,9 +297,9 @@ public class ProcessorProgramManager {
     }
 
     private ServerCommandSource getSource(BlockEntityAttributes attrs) {
-        if (_cachedSource == null || _cachedSource.getWorld() != attrs.world()) {
+        if (cachedSource == null || cachedSource.getWorld() != attrs.world()) {
             MinecraftServer server = attrs.world().getServer();
-            _cachedSource = new ServerCommandSource(
+            cachedSource = new ServerCommandSource(
                     server,
                     Vec3d.ofCenter(attrs.pos()),
                     Vec2f.ZERO,
@@ -304,18 +311,18 @@ public class ProcessorProgramManager {
                     null
             );
         }
-        return _cachedSource;
+        return cachedSource;
     }
 
     public List<String> getRawLines() {
-        return _uncompiledLines;
+        return uncompiledLines;
     }
 
 
     public List<Integer> getInvalidLines() {
         List<Integer> invalidLines = new ArrayList<>();
-        for (int i = 0; i < _programLines.size(); i++) {
-            if (!_programLines.get(i).isValid()) {
+        for (int i = 0; i < programLines.size(); i++) {
+            if (!programLines.get(i).isValid()) {
                 invalidLines.add(i);
             }
         }
@@ -323,13 +330,13 @@ public class ProcessorProgramManager {
     }
 
     public void setClientRawLines(List<String> newLines, List<Integer> invalidLines) {
-        _programLines.clear();
-        _uncompiledLines.clear();
-        _uncompiledLines.addAll(newLines);
+        programLines.clear();
+        uncompiledLines.clear();
+        uncompiledLines.addAll(newLines);
         for (int i = 0; i < newLines.size(); i++) {
             String line = newLines.get(i);
             LineState lineState = invalidLines.contains(i) ? LineState.INVALID : LineState.VALID;
-            _programLines.add(new CommandLine(line, LineType.RAW, lineState, -1, false, false));
+            programLines.add(new CommandLine(line, LineType.RAW, lineState, -1, false, false));
         }
     }
 }
