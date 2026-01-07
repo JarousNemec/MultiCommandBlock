@@ -9,7 +9,7 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.jardathedev.multicommandblock.entity.processorProgram.ProcessorProgramManager;
+import org.jardathedev.multicommandblock.entity.processorProgram.ProgramManager;
 import org.jardathedev.multicommandblock.shared.BlockEntityAttributes;
 import org.jardathedev.multicommandblock.registry.ModBlockEntities;
 
@@ -18,31 +18,31 @@ import java.util.List;
 
 public class CommandProcessorBlockEntity extends BlockEntity {
 
-    public final ProcessorProgramManager program;
+    public final ProgramManager programManager;
 
 
     private boolean wasPowered = false;
 
     public CommandProcessorBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COMMAND_PROCESSOR_BLOCK_ENTITY, pos, state);
-        program = new ProcessorProgramManager();
+        programManager = new ProgramManager();
     }
 
     public List<String> getLines() {
-        return program.getRawLines();
+        return programManager.getRawLines();
     }
 
     public List<Integer> getInvalidLines() {
-        return program.getInvalidLines();
+        return programManager.getInvalidLines();
     }
 
     public void setLinesServer(List<String> newLines) {
-        program.setNewLines(newLines);
+        programManager.setNewLines(newLines);
         markDirty();
     }
 
     public void setLinesClient(List<String> newLines, List<Integer> invalid) {
-        program.setClientRawLines(newLines, invalid);
+        programManager.setClientRawLines(newLines, invalid);
     }
 
     public void neighbourUpdate(BlockPos pos, ServerWorld world) {
@@ -62,23 +62,23 @@ public class CommandProcessorBlockEntity extends BlockEntity {
     }
 
     public void onRedstoneRise(ServerWorld world) {
-        program.start();
+        programManager.start();
     }
 
     public void onRedstoneFall(ServerWorld world) {
-        program.stop();
+        programManager.stop();
     }
 
     public static void tick(World world, BlockPos pos, BlockState state, CommandProcessorBlockEntity be) {
         if (world.isClient) return;
-        be.program.programTick(new BlockEntityAttributes((ServerWorld) world, pos));
+        be.programManager.programTick(new BlockEntityAttributes((ServerWorld) world, pos));
     }
 
     @Override
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
         NbtList list = new NbtList();
-        for (String line : program.getRawLines()) {
+        for (String line : programManager.getRawLines()) {
             list.add(NbtString.of(line));
         }
         nbt.put("Lines", list);
@@ -92,6 +92,6 @@ public class CommandProcessorBlockEntity extends BlockEntity {
         for (int i = 0; i < list.size(); i++) {
             lines.add(list.getString(i));
         }
-        program.setNewLines(lines);
+        programManager.setNewLines(lines);
     }
 }
