@@ -2,6 +2,7 @@ package org.jardathedev.multicommandblock.entity.programProcessor;
 
 import org.jardathedev.multicommandblock.shared.CommandLine;
 import org.jardathedev.multicommandblock.shared.ExecutionFrame;
+import org.jardathedev.multicommandblock.shared.enums.ExecutionMode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public class ProgramData {
     private int executionPointer = 0;
     private int sleepTicks = 0;
     private boolean isExecuting = false;
+    private ExecutionMode executionMode = ExecutionMode.FAST;
 
     public ProgramData() {
         this.programLines = new ArrayList<>();
@@ -37,6 +39,9 @@ public class ProgramData {
         this.isExecutable = true;
         this.programLines.clear();
         this.executionFrames.clear();
+        this.executionMode = ExecutionMode.FAST;
+        this.sleepTicks = 0;
+        this.executionPointer = 0;
     }
 
     public List<CommandLine> getProgramLines() {
@@ -106,5 +111,13 @@ public class ProgramData {
 
     public void increaseExecutionPointerByOne() {
         executionPointer++;
+    }
+
+    public ExecutionMode getExecutionMode() {
+        return this.executionMode;
+    }
+
+    public void setExecutionMode(ExecutionMode executionMode) {
+        this.executionMode = executionMode;
     }
 }

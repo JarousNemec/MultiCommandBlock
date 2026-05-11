@@ -12,7 +12,7 @@ public class CommandUtil {
     public static final String[] MINECRAFT_COMMAND_KEYWORDS = {"help", "say", "tell", "tellraw", "msg", "w", "me", "trigger", "give", "clear", "kill", "tp", "teleport", "summon", "effect", "attribute", "enchant", "experience", "xp", "gamemode", "difficulty", "team", "scoreboard", "title", "bossbar", "execute", "if", "unless", "as", "at", "positioned", "facing", "rotated", "anchored", "align", "run", "store", "result", "success", "data", "merge", "modify", "get", "remove", "time", "weather", "daylock", "gamerule", "seed", "setblock", "fill", "clone", "loot", "place", "structure", "forceload", "function", "schedule", "reload", "debug", "perf", "version", "stop", "save-all", "save-on", "save-off", "publish", "op", "deop", "whitelist", "ban", "pardon", "kick", "list", "locate", "locatebiome", "spawnpoint", "worldborder", "particle", "playsound", "stopsound", "tag", "advancement", "recipe", "spectate", "camera", "random", "testfor", "testforblock", "testforblocks", "block", "blocks", "entity", "score", "predicate", "biome", "dimension", "@p", "@a", "@r", "@s", "@e", "true", "false", "matches", "distance", "level", "limit", "sort", "type", "name", "nbt"};
 
     public static final String[] CUSTOM_COMMAND_KEYWORDS = {
-            "sleep", "repeat"
+            "sleep", "repeat", "jump", "exec_mode"
     };
 
     public static final String[] NBT_KEYWORDS = {

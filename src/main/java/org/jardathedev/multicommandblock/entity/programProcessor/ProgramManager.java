@@ -20,7 +20,6 @@ public class ProgramManager {
         this.cmdSourceStore = new CmdSourceStore();
         this.program = new ProgramData();
         this.runtime = new ProgramRuntime(program, cmdSourceStore);
-
     }
 
     public void start() {

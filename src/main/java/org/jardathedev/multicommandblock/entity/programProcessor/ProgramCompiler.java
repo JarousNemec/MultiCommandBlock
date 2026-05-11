@@ -7,6 +7,7 @@ import org.jardathedev.multicommandblock.shared.BlockEntityAttributes;
 import org.jardathedev.multicommandblock.shared.CommandLine;
 import org.jardathedev.multicommandblock.shared.CustomCommentValidationResult;
 import org.jardathedev.multicommandblock.shared.ExecutionFrame;
+import org.jardathedev.multicommandblock.shared.enums.ExecutionMode;
 import org.jardathedev.multicommandblock.shared.enums.LineState;
 import org.jardathedev.multicommandblock.shared.enums.LineType;
 import org.jardathedev.multicommandblock.util.CommandUtil;
@@ -116,7 +117,7 @@ public static void compileProgram(List<String> linesToCompile, ProgramData progr
         List<String> args = parseArguments(line);
         if (args.size() <= 1)
             return new CustomCommentValidationResult(false, false, 1);
-        String command = args.get(0);
+        String command = args.get(0).toLowerCase();
         List<String> params = args.subList(1, args.size());
         if ("sleep".equals(command) && !params.isEmpty()) {
             if (!isInteger(params.get(0)))
@@ -141,6 +142,29 @@ public static void compileProgram(List<String> linesToCompile, ProgramData progr
                 return new CustomCommentValidationResult(false, false, 1);
             }
             return new CustomCommentValidationResult(revolutions >= 0, true, revolutions);
+        }
+//       TODO: investigate if the jump command is needed because it probably needs to cooperate with if condition because otherwise it would work as while True cycle so maybe it wouldnt be that bad maybe....
+        if ("jump".equals(command) && !params.isEmpty()) {
+            if (!isInteger(params.get(0)))
+                return new CustomCommentValidationResult(false, false, 1);
+            int lineNumber;
+            try {
+                lineNumber = Integer.parseInt(params.get(0));
+            } catch (NumberFormatException e) {
+                return new CustomCommentValidationResult(false, false, 1);
+            }
+            return new CustomCommentValidationResult(lineNumber >= 0, true, 1);
+        }
+        if ("exec_mode".equals(command) && !params.isEmpty()) {
+            if (!isInteger(params.get(0)))
+                return new CustomCommentValidationResult(false, false, 1);
+            int mode;
+            try {
+                mode = Integer.parseInt(params.get(0));
+            } catch (NumberFormatException e) {
+                return new CustomCommentValidationResult(false, false, 1);
+            }
+            return new CustomCommentValidationResult(mode == ExecutionMode.FAST.getNumericValue() || mode == ExecutionMode.TICK.getNumericValue(), true, 1);
         }
 
         return new CustomCommentValidationResult(false, false, 1);
