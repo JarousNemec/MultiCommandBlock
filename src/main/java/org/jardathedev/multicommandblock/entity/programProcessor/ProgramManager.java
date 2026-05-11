@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.entity.processorProgram;
+package org.jardathedev.multicommandblock.entity.programProcessor;
 
 import org.jardathedev.multicommandblock.Multicommandblock;
 import org.jardathedev.multicommandblock.shared.*;
@@ -35,18 +35,17 @@ public class ProgramManager {
         //check if compiled
         if (!program.isCompiled()) {
             Multicommandblock.LOGGER.info("Compiling before execution...");
-            var isCompiled = ProgramCompiler.compileLines(rawLines, program.getProgramLines(), program.getExecutionFrames(), attrs, cmdSourceStore);
-            program.setCompiled(isCompiled);
+            ProgramCompiler.compileProgram(rawLines, program, attrs, cmdSourceStore);
             Multicommandblock.LOGGER.info("Compilation complete!");
         }
-
-        runtime.programTick(attrs);
+        if (program.isExecutable() && program.isExecuting())
+            runtime.programTick(attrs);
     }
 
     public void setNewLines(List<String> newLines) {
         this.rawLines.clear();
         this.rawLines.addAll(newLines);
-        program.setCompiled(false);
+        program.setCompilationResults(false, false);
     }
 
     public List<String> getRawLines() {

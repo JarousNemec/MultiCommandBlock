@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.entity.processorProgram;
+package org.jardathedev.multicommandblock.entity.programProcessor;
 
 import org.jardathedev.multicommandblock.shared.CommandLine;
 import org.jardathedev.multicommandblock.shared.ExecutionFrame;
@@ -13,6 +13,8 @@ public class ProgramData {
     private final List<ExecutionFrame> executionFrames;
     private final Deque<ExecutionFrame> executionStack;
     private boolean isCompiled = false;
+    private boolean isExecutable = true;
+
 
     private int executionPointer = 0;
     private int sleepTicks = 0;
@@ -28,6 +30,13 @@ public class ProgramData {
         this.programLines.clear();
         this.executionFrames.clear();
         this.executionStack.clear();
+    }
+
+    public void resetBeforeCompilation() {
+        this.isCompiled = false;
+        this.isExecutable = true;
+        this.programLines.clear();
+        this.executionFrames.clear();
     }
 
     public List<CommandLine> getProgramLines() {
@@ -62,8 +71,9 @@ public class ProgramData {
         return programLines.size();
     }
 
-    public void setCompiled(boolean isCompiled) {
+    public void setCompilationResults(boolean isCompiled, boolean isExecutable) {
         this.isCompiled = isCompiled;
+        this.isExecutable = isExecutable;
     }
 
     public void setExecutionPointer(int executionPointer) {
@@ -80,6 +90,10 @@ public class ProgramData {
 
     public boolean isCompiled() {
         return isCompiled;
+    }
+
+    public boolean isExecutable() {
+        return isExecutable;
     }
 
     public boolean isExecuting() {

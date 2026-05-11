@@ -9,7 +9,7 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.jardathedev.multicommandblock.entity.processorProgram.ProgramManager;
+import org.jardathedev.multicommandblock.entity.programProcessor.ProgramManager;
 import org.jardathedev.multicommandblock.shared.BlockEntityAttributes;
 import org.jardathedev.multicommandblock.registry.ModBlockEntities;
 

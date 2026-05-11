@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.entity.processorProgram;
+package org.jardathedev.multicommandblock.entity.programProcessor;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;

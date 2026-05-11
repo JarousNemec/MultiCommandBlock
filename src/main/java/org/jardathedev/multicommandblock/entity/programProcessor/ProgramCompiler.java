@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.entity.processorProgram;
+package org.jardathedev.multicommandblock.entity.programProcessor;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -10,6 +10,7 @@ import org.jardathedev.multicommandblock.shared.ExecutionFrame;
 import org.jardathedev.multicommandblock.shared.enums.LineState;
 import org.jardathedev.multicommandblock.shared.enums.LineType;
 import org.jardathedev.multicommandblock.util.CommandUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -19,9 +20,12 @@ import static org.jardathedev.multicommandblock.util.CommandUtil.MINECRAFT_COMMA
 import static org.jardathedev.multicommandblock.util.CommandUtil.endCorrespondingFrames;
 
 public class ProgramCompiler {
-    public static boolean compileLines(List<String> linesToCompile, List<CommandLine> programLines, List<ExecutionFrame> executionFrames, BlockEntityAttributes attrs, CmdSourceStore cmdSourceStore) {
-        programLines.clear();
-        executionFrames.clear();
+public static void compileProgram(List<String> linesToCompile, ProgramData program, BlockEntityAttributes attrs, CmdSourceStore cmdSourceStore) {
+        program.resetBeforeCompilation();
+
+        var programLines = program.getProgramLines();
+        var executionFrames = program.getExecutionFrames();
+
         MinecraftServer server = attrs.world().getServer();
 
         boolean hasErrors = false;
@@ -29,24 +33,24 @@ public class ProgramCompiler {
         CommandLine programLine = null;
         int lastExecutableLineIndex = 0;
 
-        for (int i = 0; i <= linesToCompile.size(); i++) {
+        for (int lineIndex = 0; lineIndex <= linesToCompile.size(); lineIndex++) {
             if (programLine != null) {
                 programLines.add(programLine);
             }
-            if (i == linesToCompile.size())
+            if (lineIndex == linesToCompile.size())
                 break;
 
-            String line = linesToCompile.get(i);
+            String line = linesToCompile.get(lineIndex);
             String trimmed = line.stripLeading();
             int indent = line.length() - trimmed.length();
             int indentLevel = indent / INDENT.length();
 
             if (line.isBlank()) {
-                programLine = new CommandLine(trimmed, LineType.BLANK, LineState.VALID, indentLevel, false, false);
+                programLine = createValidProgramLine(trimmed, LineType.BLANK, indentLevel, false, false);
                 continue;
             }
             if (CommandUtil.isComment(trimmed)) {
-                programLine = new CommandLine(trimmed, LineType.COMMENT, LineState.VALID, indentLevel, false, false);
+                programLine = createValidProgramLine(trimmed, LineType.COMMENT, indentLevel, false, false);
                 continue;
             }
 
@@ -56,43 +60,56 @@ public class ProgramCompiler {
             }
 
             if (indentLevel > currentChildIndentLevel) {
-                programLine = new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
+                programLine = createInvalidProgramLine(trimmed, indentLevel);
             } else if (trimmed.length() < 2 || (!trimmed.startsWith(MINECRAFT_COMMAND_START_CHAR) && !trimmed.startsWith(CUSTOM_COMMAND_START_CHAR))) {
-                programLine = new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
+                programLine = createInvalidProgramLine(trimmed, indentLevel);
             } else if (trimmed.startsWith(MINECRAFT_COMMAND_START_CHAR))
                 if (isValidMinecraftCommand(trimmed.substring(1), cmdSourceStore.getSource(attrs), server.getCommandManager())) {
-                    programLine = new CommandLine(trimmed, LineType.MINECRAFT, LineState.VALID, indentLevel, true, false);
-                    lastExecutableLineIndex = i;
+                    programLine = createValidProgramLine(trimmed, LineType.MINECRAFT, indentLevel, true, false);
+                    lastExecutableLineIndex = lineIndex;
                 } else {
-                    programLine = new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
+                    programLine = createInvalidProgramLine(trimmed, indentLevel);
                 }
             else if (trimmed.startsWith(CUSTOM_COMMAND_START_CHAR)) {
-                var result = isValidCustomCommand(trimmed.substring(1));
-                if (result.isValid()) {
-                    if (result.definesCodeBlock()) {
+                var validationResult = isValidCustomCommand(trimmed.substring(1));
+                if (validationResult.isValid()) {
+                    if (validationResult.definesNewExecutionFrame()) {
                         currentChildIndentLevel = indentLevel + 1;
-                        if (i + 1 < linesToCompile.size()) {
-                            var newFrame = new ExecutionFrame();
-                            newFrame.childIndentLevel = currentChildIndentLevel;
-                            newFrame.enterIndex = i;
-                            newFrame.startIndex = i + 1;
-                            newFrame.revolutionsCount = result.loopCount();
-                            executionFrames.add(newFrame);
+                        if (lineIndex + 1 < linesToCompile.size()) {
+                            registerNewExecutionFrame(currentChildIndentLevel, lineIndex, validationResult, executionFrames);
                         }
-                        programLine = new CommandLine(trimmed, LineType.CUSTOM, LineState.VALID, indentLevel, true, true);
+                        programLine = createValidProgramLine(trimmed, LineType.CUSTOM, indentLevel, true, true);
                     } else {
-                        programLine = new CommandLine(trimmed, LineType.CUSTOM, LineState.VALID, indentLevel, true, false);
+                        programLine = createValidProgramLine(trimmed, LineType.CUSTOM, indentLevel, true, false);
                     }
-                    lastExecutableLineIndex = i;
+                    lastExecutableLineIndex = lineIndex;
                 } else {
-                    programLine = new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
+                    programLine = createInvalidProgramLine(trimmed, indentLevel);
                 }
             } else
-                programLine = new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
+                programLine = createInvalidProgramLine(trimmed, indentLevel);
         }
         if (!programLines.isEmpty())
             endCorrespondingFrames(programLines, executionFrames, 0, lastExecutableLineIndex);
-        return !hasErrors;
+
+        program.setCompilationResults(true, !hasErrors);
+    }
+
+    private static @NotNull CommandLine createValidProgramLine(String trimmed, LineType type, int indentLevel, boolean isExecutable, boolean hasBody) {
+        return new CommandLine(trimmed, type, LineState.VALID, indentLevel, isExecutable, hasBody);
+    }
+
+    private static @NotNull CommandLine createInvalidProgramLine(String trimmed, int indentLevel) {
+        return new CommandLine(trimmed, LineType.RAW, LineState.INVALID, indentLevel, false, false);
+    }
+
+    private static void registerNewExecutionFrame(int currentChildIndentLevel, int i, CustomCommentValidationResult result, List<ExecutionFrame> executionFrames) {
+        var newFrame = new ExecutionFrame();
+        newFrame.childIndentLevel = currentChildIndentLevel;
+        newFrame.enterIndex = i;
+        newFrame.startIndex = i + 1;
+        newFrame.revolutionsCount = result.loopCount();
+        executionFrames.add(newFrame);
     }
 
     public static CustomCommentValidationResult isValidCustomCommand(String line) {

@@ -1,4 +1,4 @@
-package org.jardathedev.multicommandblock.entity.processorProgram;
+package org.jardathedev.multicommandblock.entity.programProcessor;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -34,11 +34,6 @@ public class ProgramRuntime {
     }
 
     public void programTick(BlockEntityAttributes attrs) {
-        //escape if not running
-        if (!program.isExecuting())
-            return;
-
-
         var programLines = program.getProgramLines();
         var executionStack = program.getExecutionStack();
 
